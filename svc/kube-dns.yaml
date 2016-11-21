@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-dns
+  namespace: kube-system
+spec:
+  clusterIP: 77.80.231.62
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+    targetPort: 53
+  - name: dns-tcp
+    port: 53
+    protocol: TCP
+    targetPort: 53
+  selector:
+    name: kube-dns
+  sessionAffinity: None
+  type: ClusterIP
