@@ -6,11 +6,10 @@ metadata:
 spec:
   clusterIP: 77.80.231.61
   ports:
-  - nodePort: 31332
-    port: 80
+  - port: 80
     protocol: TCP
     targetPort: 9090
   selector:
     app: kubernetes-dashboard
   sessionAffinity: None
-  type: NodePort
+  type: ClusterIP
