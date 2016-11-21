@@ -1,0 +1,13 @@
+neighbor 77.80.231.241 {
+	router-id 77.80.231.244;
+	local-address 77.80.231.244;
+	local-as 64512;
+	peer-as 64512;
+	family {
+		ipv4 unicast;
+		ipv6 unicast;
+	}
+	process svc-bgp {
+		run /home/tech/bluecmd/k8s/svc-bgp.sh;
+	}
+}
