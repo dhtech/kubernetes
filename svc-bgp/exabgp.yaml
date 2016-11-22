@@ -1,0 +1,89 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: exabgp-config 
+data:
+  exabgp.conf: |
+      process svc-bgp {
+        run /bin/bash /etc/exabgp/svc-bgp.sh;
+        encoder text;
+      }
+      neighbor 77.80.231.241 {
+        router-id __POD_IP__;
+        local-address __POD_IP__;
+        local-as 65001;
+        peer-as 65000;
+        family {
+          ipv4 unicast;
+        }
+       api {
+         processes [ svc-bgp ];
+       }
+      }
+
+  start-exabgp.sh: |
+      #!/bin/bash
+      /bin/sed -i s/__POD_IP__/${POD_IP}/g /etc/exabgp/exabgp.conf
+      /usr/bin/touch /tmp/bgp
+      /usr/bin/env \
+        exabgp.log.routes=true \
+        exabgp.daemon.user=root \
+        exabgp /etc/exabgp/exabgp.conf
+
+  svc-bgp.sh: |
+      #!/bin/bash
+      
+      old=""
+      while true;
+      do
+        sleep 1
+        if [ "$(sha1sum /tmp/bgp)" = "${old}" ]; then
+          continue
+        fi
+        old="$(sha1sum /tmp/bgp)"
+        cat /tmp/bgp
+      done
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: exabgp
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      name: exabgp
+      labels:
+        app: exabgp
+    spec:
+      containers:
+      - image: pierky/exabgp
+        imagePullPolicy: Always
+        name: exabgp
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/exabgp
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        command: ["/bin/bash", "/etc/exabgp/start-exabgp.sh"]
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+       - name: config-volume
+         configMap:
+           name: exabgp-config
+
+---
+
