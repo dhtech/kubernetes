@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    app: svc-bgp 
+  name: svc-bgp
+spec:
+  template:
+    metadata:
+      labels:
+        app: svc-bgp-node
+    spec:
+      containers:
+      - image: ubuntu:16.04
+        name: svc-bgp-node
+        command: ["sleep", "infinity"]
+        ports:
+          - containerPort: 179
+            name: bgp
