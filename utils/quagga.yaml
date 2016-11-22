@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: quagga-test
+  name: quagga-test
+  namespace: default
+spec:
+  containers:
+  - image: ewindisch/quagga
+    imagePullPolicy: Always
+    name: quagga-test
+    securityContext:
+      privileged: true
