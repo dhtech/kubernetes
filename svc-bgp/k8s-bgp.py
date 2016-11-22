@@ -4,8 +4,17 @@ import json
 import requests
 import collections
 import time
+import os 
 
-api = "https://kubernetes.default"
+cert_path_default = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+token_path_default = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+api = os.environ.get("SVC_BGP_API_ENDPOINT","https://kubernetes.default")
+cert_path = os.environ.get("SVC_BGP_API_CERT", cert_path_default)
+token_path = os.environ.get("SVC_BGP_API_TOKEN", token_path_default)
+
+with open(token_path) as f:
+    token=f.read().strip()
 
 host = collections.namedtuple("host",("name", "podcidr"))
 endpoint = collections.namedtuple("endpoint",
@@ -19,6 +28,12 @@ node = collections.namedtuple("node",
 
 route = collections.namedtuple("route",
     ("dstip","nexthop"))
+
+def api_read(path):
+    return requests.get(
+        "{api}{path}".format(api=api,path=path), 
+        verify=cert_path, 
+        headers={"authorization":"bearer {token}".format(token=token) })
 
 def parse_subsets(row,name,namespace):
     node = None
@@ -37,9 +52,8 @@ def parse_subsets(row,name,namespace):
 
 def generate_endpoints():
     endpoints = {} 
-    endpoints_path = "/api/v1/endpoints"
-    endpoints_r = requests.get(
-        "{api}{path}".format(api=api,path=endpoints_path))
+    path = "/api/v1/endpoints"
+    endpoints_r = api_read(path)
 
     for line in json.loads(endpoints_r.text)['items']:
         name = line['metadata']['name']
@@ -50,9 +64,8 @@ def generate_endpoints():
 
 def generate_services():
     services = {}
-    services_path = "/api/v1/services"
-    services_r = requests.get(
-        "{api}{path}".format(api=api,path=services_path))
+    path = "/api/v1/services"
+    services_r = api_read(path)
 
     for line in json.loads(services_r.text)['items']:
         ip = line['spec']['clusterIP']
@@ -65,9 +78,8 @@ def generate_services():
 
 def generate_nodes():
     nodes = {} 
-    nodes_path = "/api/v1/nodes"
-    nodes_r = requests.get(
-        "{api}{path}".format(api=api,path=nodes_path))
+    path = "/api/v1/nodes"
+    nodes_r = api_read(path)
 
     for line in json.loads(nodes_r.text)['items']:
         name = line['metadata']['name']
@@ -106,7 +118,7 @@ def main():
         for rt in deleted_routes:
             print "withdraw route {dstip}/32 next-hop {nexthop}".format(dstip=rt.dstip, nexthop=rt.nexthop)
         old_routes = routes
-        time.sleep(5)
+        time.sleep(1)
 
 
 main()
