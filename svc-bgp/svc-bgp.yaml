@@ -6,7 +6,7 @@ metadata:
 data:
   exabgp.conf: |
       process svc-bgp {
-        run /usr/bin/python /opt/svc-bgp.py;
+        run /usr/bin/python -u /opt/k8s-bgp.py;
         encoder text;
       }
       neighbor 77.80.231.241 {
@@ -24,6 +24,7 @@ data:
 
   start-exabgp.sh: |
       #!/bin/bash
+      echo "77.80.231.33 kubernetes.default" >> /etc/hosts
       /bin/sed -i s/__POD_IP__/${POD_IP}/g /etc/exabgp/exabgp.conf
       /usr/bin/env \
         exabgp.log.routes=true \
