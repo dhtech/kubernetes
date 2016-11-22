@@ -1,19 +1,75 @@
-apiVersion: extensions/v1beta1
-kind: DaemonSet
+kind: ConfigMap
+apiVersion: v1
 metadata:
-  labels:
-    app: svc-bgp 
+  name: svc-bgp-config 
+  namespace: kube-system
+data:
+  exabgp.conf: |
+      process svc-bgp {
+        run /usr/bin/python /opt/svc-bgp.py;
+        encoder text;
+      }
+      neighbor 77.80.231.241 {
+        router-id __POD_IP__;
+        local-address __POD_IP__;
+        local-as 65001;
+        peer-as 65000;
+        family {
+          ipv4 unicast;
+        }
+       api {
+         processes [ svc-bgp ];
+       }
+      }
+
+  start-exabgp.sh: |
+      #!/bin/bash
+      /bin/sed -i s/__POD_IP__/${POD_IP}/g /etc/exabgp/exabgp.conf
+      /usr/bin/env \
+        exabgp.log.routes=true \
+        exabgp.daemon.user=root \
+        exabgp /etc/exabgp/exabgp.conf
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
   name: svc-bgp
+  namespace: kube-system
 spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
   template:
     metadata:
+      name: svc-bgp
       labels:
-        app: svc-bgp-node
+        app: svc-bgp
     spec:
       containers:
-      - image: ubuntu:16.04
-        name: svc-bgp-node
-        command: ["sleep", "infinity"]
-        ports:
-          - containerPort: 179
-            name: bgp
+      - image: svc-bgp
+        name: svc-bgp
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/exabgp
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        command: ["/bin/bash", "/etc/exabgp/start-exabgp.sh"]
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+       - name: config-volume
+         configMap:
+           name: svc-bgp-config
+
+---
+
