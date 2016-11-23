@@ -9,6 +9,7 @@ import os
 cert_path_default = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 token_path_default = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
+node_name = os.environ.get("SVC_BGP_NODE_NAME")
 api = os.environ.get("SVC_BGP_API_ENDPOINT","https://kubernetes.default")
 cert_path = os.environ.get("SVC_BGP_API_CERT", cert_path_default)
 token_path = os.environ.get("SVC_BGP_API_TOKEN", token_path_default)
@@ -89,7 +90,7 @@ def generate_nodes():
 
     return nodes
 
-def build_routes():
+def build_routes(node_name):
     endpoints = generate_endpoints()
     services = generate_services() 
     nodes = generate_nodes()
@@ -97,17 +98,15 @@ def build_routes():
 
     for svc in services.values():
         for ep in endpoints[(svc.name,svc.namespace)]:
-            if ep.node == None and ep.ip != None:
-                routes.add(route(svc.ip,ep.ip))
-            elif ep.ip != None:
-                routes.add(route(svc.ip,nodes[ep.node].ip))
+            if ep.ip == nodes[node_name].ip:
+                routes.add(route(svc.ip,node_name))
 
     return routes
 
 def main():
     old_routes = set()
     while True:    
-        routes = build_routes()
+        routes = build_routes(node_name)
         
         added_routes = routes - old_routes
         deleted_routes = old_routes - routes

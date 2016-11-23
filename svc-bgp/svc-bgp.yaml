@@ -61,10 +61,10 @@ spec:
         - name: config-volume
           mountPath: /etc/exabgp
         env:
-        - name: POD_IP
+        - name: SVC_BGP_NODE_NAME
           valueFrom:
             fieldRef:
-              fieldPath: status.podIP
+              fieldPath: spec.nodeName
         command: ["/bin/bash", "/etc/exabgp/start-exabgp.sh"]
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
