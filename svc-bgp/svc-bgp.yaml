@@ -29,22 +29,17 @@ data:
       /usr/bin/env \
         exabgp.log.routes=true \
         exabgp.daemon.user=root \
+        exabgp.api.respawn=true \
         exabgp /etc/exabgp/exabgp.conf
 
 ---
 
 apiVersion: extensions/v1beta1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: svc-bgp
   namespace: kube-system
 spec:
-  replicas: 1
-  strategy:
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
-    type: RollingUpdate
   template:
     metadata:
       name: svc-bgp
@@ -61,6 +56,10 @@ spec:
         - name: config-volume
           mountPath: /etc/exabgp
         env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
         - name: SVC_BGP_NODE_NAME
           valueFrom:
             fieldRef:
