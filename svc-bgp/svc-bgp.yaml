@@ -51,8 +51,8 @@ spec:
           [{"key": "role", "value": "master", "effect": "NoSchedule" }]
     spec:
       containers:
-      - image: svc-bgp
-        imagePullPolicy: Never
+      - image: val.tech.dreamhack.se/svc-bgp
+        imagePullPolicy: Always
         name: svc-bgp
         securityContext:
           privileged: true
@@ -69,6 +69,8 @@ spec:
             fieldRef:
               fieldPath: spec.nodeName
         command: ["/bin/bash", "/etc/exabgp/start-exabgp.sh"]
+      imagePullSecrets:
+        - name: tech-registry-key
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       volumes:
