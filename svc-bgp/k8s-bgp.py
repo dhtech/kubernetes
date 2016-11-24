@@ -98,7 +98,7 @@ def build_routes(node_name):
 
     for svc in services.values():
         for ep in endpoints.get((svc.name,svc.namespace),[]):
-            if ep.node == node_name:
+            if ep.node == node_name or ep.ip == nodes[node_name].ip:
                 routes.add(route(svc.ip,nodes[node_name].ip))
 
     return routes
