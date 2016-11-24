@@ -45,6 +45,10 @@ spec:
       name: svc-bgp
       labels:
         app: svc-bgp
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+        scheduler.alpha.kubernetes.io/tolerations: |
+          [{"key": "role", "value": "master", "effect": "NoSchedule" }]
     spec:
       containers:
       - image: svc-bgp
