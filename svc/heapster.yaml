@@ -4,7 +4,7 @@ metadata:
   name: heapster
   namespace: kube-system
 spec:
-  clusterIP: 77.80.231.60
+  clusterIP: 77.80.229.156
   ports:
   - port: 80
     protocol: TCP
@@ -13,3 +13,31 @@ spec:
     k8s-app: heapster
   sessionAffinity: None
   type: ClusterIP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: heapster
+  namespace: kube-system
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: heapster
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: heapster
+    spec:
+      serviceAccountName: heapster
+      containers:
+      - name: heapster
+        image: gcr.io/google_containers/heapster-amd64:v1.3.0
+        imagePullPolicy: IfNotPresent
+        command:
+        - /heapster
+        - --source=kubernetes:https://kubernetes.default

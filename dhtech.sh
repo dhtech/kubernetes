@@ -18,15 +18,10 @@ do
 done
 
 kubectl apply -f calico/calico.yaml
-kubectl apply -f svc-bgp/svc-bgp.yaml
 
 kubectl create namespace public
 kubectl create namespace prod
 
-kubectl replace -f svc/kube-dns.yaml
-
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/heapster/release-1.2/deploy/kube-config/standalone/heapster-controller.yaml
-kubectl apply -f svc/heapster.yaml
-
-kubectl apply -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml
-kubectl replace -f svc/kubernetes-dashboard.yaml
+kubectl create -f svc/kube-dns.yaml
+kubectl create -f svc/heapster.yaml
+kubectl create -f svc/kubernetes-dashboard.yaml

@@ -6,7 +6,7 @@ metadata:
   name: prober
   namespace: prod
 spec:
-  clusterIP: 77.80.231.38
+  clusterIP: 77.80.229.134
   ports:
   - name: probe
     port: 80
