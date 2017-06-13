@@ -6,6 +6,9 @@ read username
 echo -n "Password: "
 read password
 
+kubectl create namespace public
+kubectl create namespace prod
+
 for ns in $(kubectl get namespace -o name | cut -f 2 -d '/')
 do
   echo "Registering pull secret for namespace $ns"
@@ -18,10 +21,6 @@ do
 done
 
 kubectl apply -f calico/calico.yaml
-
-kubectl create namespace public
-kubectl create namespace prod
-
 kubectl create -f svc/kube-dns.yaml
 kubectl create -f svc/heapster.yaml
 kubectl create -f svc/kubernetes-dashboard.yaml
