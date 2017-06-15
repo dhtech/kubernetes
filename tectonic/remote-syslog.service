@@ -1,0 +1,9 @@
+[Unit]
+Description=Remote logging
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bash -c "journalctl -o short -f | ncat --udp syslog1.event.dreamhack.se 514"
+
+[Install]
+WantedBy=multi-user.target
