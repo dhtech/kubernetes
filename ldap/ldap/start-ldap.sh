@@ -79,8 +79,9 @@ copy_ldap olcSyncRepl
 copy_ldap olcDbIndex
 
 # Mark current contextCSN to know when replication has caught up
-ldapsearch -y /tmp/ldap.secret -x -b "${BASE_DN}" -H ldaps://${MASTER:?} \
-  -s base -LLL contextCSN | awk '/contextCSN:/ {print $2}' > /initial-contextCSN
+ldapsearch -y /tmp/ldap.secret -x -D "cn=admin,cn=config" -b "${BASE_DN}" \
+  -H ldaps://${MASTER:?} -s base -LLL contextCSN \
+  | awk '/contextCSN:/ {print $2}' > /initial-contextCSN
 
 rm /tmp/ldap.secret
 
