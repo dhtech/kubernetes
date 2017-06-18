@@ -47,11 +47,35 @@ spec:
         volumeMounts:
           - name: tls-volume
             mountPath: /etc/ssl/ldap
+        env:
+          - name: CA
+            value: /etc/ssl/ldap/ca.crt
+          - name: CERTFILE
+            value: /etc/ssl/ldap/server.crt
+          - name: KEYFILE
+            value: /etc/ssl/ldap/server.key
+          - name: LOGLEVEL
+            value: "0x4120"
+          - name: MASTER
+            valueFrom:
+              secretKeyRef:
+                name: ldap-credentials
+                key: master
+          - name: MASTERPW
+            valueFrom:
+              secretKeyRef:
+                name: ldap-credentials
+                key: master-password
+          - name: ROOTPW
+            valueFrom:
+              secretKeyRef:
+                name: ldap-credentials
+                key: root-password
         resources:
               requests:
-                memory: "500Mi"
-              limits:
                 memory: "900Mi"
+              limits:
+                memory: "1500Mi"
         readinessProbe:
           exec:
             command:
@@ -59,7 +83,8 @@ spec:
         livenessProbe:
           exec:
             command:
-              - ldapsearch -x -H ldapi:/// -s base -LLL dc
+              - /usr/bin/ldapsearch -x -H ldapi:/// -s base -LLL dc
+          initialDelaySeconds: 60
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       volumes:
