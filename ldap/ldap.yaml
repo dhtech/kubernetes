@@ -11,7 +11,6 @@ spec:
     port: 636
     protocol: TCP
     targetPort: 636
-    nodePort: 30018
   selector:
     app: ldap
   sessionAffinity: None
@@ -75,7 +74,7 @@ spec:
               requests:
                 memory: "900Mi"
               limits:
-                memory: "1500Mi"
+                memory: "4000Mi"
         readinessProbe:
           exec:
             command:
@@ -83,7 +82,14 @@ spec:
         livenessProbe:
           exec:
             command:
-              - /usr/bin/ldapsearch -x -H ldapi:/// -s base -LLL dc
+              - /usr/bin/ldapsearch
+              - -x
+              - -H
+              - ldapi:///
+              - -s
+              - base
+              - -LLL
+              - dc
           initialDelaySeconds: 60
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
