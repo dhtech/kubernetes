@@ -25,9 +25,12 @@ DEBIAN_FRONTEND=noninteractive dpkg -i /slapd*.deb
 
 echo "Installing slapd configuration"
 
+cat << _EOF_ >> /etc/ldap/slapd.d/cn=config.ldif
+olcTLSCACertificateFile: ${CA:?}
+_EOF_
+
 if [ ! -z "${KEYFILE:-}" ]; then
   cat << _EOF_ >> /etc/ldap/slapd.d/cn=config.ldif
-olcTLSCACertificateFile: ${CA:?}
 olcTLSVerifyClient: never
 olcTLSCertificateFile: ${CERTFILE:?}
 olcTLSCertificateKeyFile: ${KEYFILE:?}
