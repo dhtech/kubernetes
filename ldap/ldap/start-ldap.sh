@@ -25,12 +25,14 @@ DEBIAN_FRONTEND=noninteractive dpkg -i /slapd*.deb
 
 echo "Installing slapd configuration"
 
-cat << _EOF_ >> /etc/ldap/slapd.d/cn=config.ldif
+if [ ! -z "${KEYFILE}" ]; then
+  cat << _EOF_ >> /etc/ldap/slapd.d/cn=config.ldif
 olcTLSCACertificateFile: ${CA:?}
 olcTLSVerifyClient: never
 olcTLSCertificateFile: ${CERTFILE:?}
 olcTLSCertificateKeyFile: ${KEYFILE:?}
 _EOF_
+fi
 
 /usr/sbin/slapd -h ldapi:/// -g openldap -u openldap -F /etc/ldap/slapd.d
 
@@ -91,4 +93,4 @@ pkill slapd
 su openldap -s /usr/sbin/slapindex
 
 # Start final slapd
-exec /usr/sbin/slapd -h 'ldaps:/// ldapi:///' -g openldap -u openldap -F /etc/ldap/slapd.d "-d${LOGLEVEL}"
+exec /usr/sbin/slapd -h "${PROTOCOLS:-ldaps:///} ldapi:///" -g openldap -u openldap -F /etc/ldap/slapd.d "-d${LOGLEVEL}"
