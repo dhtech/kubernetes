@@ -11,7 +11,7 @@ touch /tmp/ldap.secret
 chmod 600 /tmp/ldap.secret
 echo -n ${MASTERPW:?} > /tmp/ldap.secret
 
-BASE_DN=$(ldapsearch -y /tmp/ldap.secret -x -D "cn=admin,cn=config" \
+BASE_DN=$(ldapsearch -y /tmp/ldap.secret -x -D "${ADMIN_BIND:?}" \
   -b "olcDatabase={1}hdb,cn=config" -H ldaps://${MASTER:?} -LLL -s base \
   | awk '/olcSuffix:/ {print $2}')
 DOMAIN=$(echo ${BASE_DN} | sed 's/,dc=/./' | sed 's/^dc=//')
@@ -54,7 +54,7 @@ _EOF_
 
 # Copy schemas
 echo "Copying schemas"
-ldapsearch -y /tmp/ldap.secret -x -D "cn=admin,cn=config" -b "cn=schema,cn=config" \
+ldapsearch -y /tmp/ldap.secret -x -D "${ADMIN_BIND:?}" -b "cn=schema,cn=config" \
   -H ldaps://${MASTER:?} -LLL > /tmp/ldap_schema.ldif
 # Schemas might already exist, so ignore exit code
 ldapadd -c -Q -Y EXTERNAL -H ldapi:/// -f /tmp/ldap_schema.ldif || true
@@ -71,7 +71,7 @@ changetype: modify
 replace: $var
 _EOF_
 
-  ldapsearch -y /tmp/ldap.secret -x -D "cn=admin,cn=config" \
+  ldapsearch -y /tmp/ldap.secret -x -D "${ADMIN_BIND:?}" \
     -b "olcDatabase={1}hdb,cn=config" -H ldaps://${MASTER:?} -LLL $var \
     | sed 1d | head -n -2 >> /tmp/modify_client
 
@@ -84,7 +84,7 @@ copy_ldap olcSyncRepl
 copy_ldap olcDbIndex
 
 # Mark current contextCSN to know when replication has caught up
-ldapsearch -y /tmp/ldap.secret -x -D "cn=admin,cn=config" -b "${BASE_DN}" \
+ldapsearch -y /tmp/ldap.secret -x -D "${ADMIN_BIND:?}" -b "${BASE_DN}" \
   -H ldaps://${MASTER:?} -s base -LLL contextCSN \
   | awk '/contextCSN:/ {print $2}' > /initial-contextCSN
 
