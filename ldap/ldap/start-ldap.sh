@@ -67,8 +67,31 @@ _EOF_
 }
 
 copy_ldap olcAccess
-copy_ldap olcSyncRepl
 copy_ldap olcDbIndex
+
+echo "Installing replication configuration"
+touch /tmp/modify_config
+chmod 600 /tmp/modify_config
+cat << _EOF_ > /tmp/modify_config
+dn: olcDatabase={1}mdb,cn=config
+changetype: modify
+replace: olcSyncrepl
+olcSyncrepl: rid=001
+  provider="ldaps://${MASTER}:636/"
+  type=refreshAndPersist
+  retry="5 10 60 +"
+  searchbase="${BASE_DN}"
+  bindmethod=sasl
+  saslmech=EXTERNAL
+  tls_cacert=${CA}
+  tls_cert=${CERTFILE}
+  tls_key=${KEYFILE}
+-
+replace: olcUpdateRef
+olcUpdateRef: ldaps://${MASTER}
+_EOF_
+ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f /tmp/modify_config
+shred -zu /tmp/modify_config
 
 # Mark current contextCSN to know when replication has caught up
 ldapsearch -y /tmp/ldap.secret -x -D "${ADMIN_BIND:?}" -b "${BASE_DN}" \
