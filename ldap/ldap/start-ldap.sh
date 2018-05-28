@@ -39,19 +39,6 @@ fi
 
 /usr/sbin/slapd -h ldapi:/// -g openldap -u openldap -F /etc/ldap/slapd.d
 
-echo "Creating root account"
-touch /tmp/modify_client
-chmod 600 /tmp/modify_client
-cat << _EOF_ | ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f /dev/stdin
-dn: olcDatabase={0}config,cn=config
-changetype: modify
-add: olcRootPW
-olcRootPW: $ROOTPW
-_EOF_
-
-# slapd might have crashed at this point (bug in ldap), so we restart
-# service slapd restart || true
-
 # Copy schemas
 echo "Copying schemas"
 ldapsearch -y /tmp/ldap.secret -x -D "${ADMIN_BIND:?}" -b "cn=schema,cn=config" \
