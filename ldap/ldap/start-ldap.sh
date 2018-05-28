@@ -12,7 +12,7 @@ chmod 600 /tmp/ldap.secret
 echo -n ${MASTERPW:?} > /tmp/ldap.secret
 
 BASE_DN=$(ldapsearch -y /tmp/ldap.secret -x -D "${ADMIN_BIND:?}" \
-  -b "olcDatabase={1}hdb,cn=config" -H ldaps://${MASTER:?} -LLL -s base \
+  -b "olcDatabase={1}mdb,cn=config" -H ldaps://${MASTER:?} -LLL -s base \
   | awk '/olcSuffix:/ {print $2}')
 DOMAIN=$(echo ${BASE_DN} | sed 's/,dc=/./' | sed 's/^dc=//')
 
@@ -59,7 +59,7 @@ replace: $var
 _EOF_
 
   ldapsearch -y /tmp/ldap.secret -x -D "${ADMIN_BIND:?}" \
-    -b "olcDatabase={1}hdb,cn=config" -H ldaps://${MASTER:?} -LLL $var \
+    -b "olcDatabase={1}mdb,cn=config" -H ldaps://${MASTER:?} -LLL $var \
     | sed 1d | head -n -2 >> /tmp/modify_client
 
   ldapmodify -c -Q -Y EXTERNAL -H ldapi:/// -f /tmp/modify_client
